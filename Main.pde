@@ -4,23 +4,28 @@ PImage dirt;
 PImage rock;
 
 int gridWidth=20;
+int grid[][];
 float nscale = .1;
 float nheight = 10;
 PVector clickStart = new PVector();
 PVector offset = new PVector();
+PVector pOffset = new PVector();
 boolean held = false;
 
 public void setup() {
   fullScreen(P2D);
+  grid = new int[gridWidth][gridWidth];
   grass = loadImage("platformerTile_48.png");
   water = loadImage("platformerTile_26.png");
   dirt = loadImage("platformerTile_01.png");
   rock = loadImage("voxelTile_29.png");
-  textSize(100);
+  drawLandscape();
 }
 
-public void draw() {
-  background(150, 226, 255);
+public void drawLandscape() {
+  fill(150, 226, 255);
+  noStroke();
+  rect(0,0,width,height);
   pushMatrix();
   translate(width/2, 3*height/4);
   float fxoff = offset.x % 1;
@@ -34,10 +39,10 @@ public void draw() {
       if (z > 3) {
         PVector sc = block2screen(x- fxoff,y-fyoff,z);
         if(isRock) {
-          //image(rock, sc.x, sc.y + 64);
+          image(rock, sc.x, sc.y + 63);
           image(rock, sc.x, sc.y);
         } else {
-          //image(dirt, sc.x, sc.y + 64);
+          image(dirt, sc.x, sc.y + 63);
           image(grass, sc.x, sc.y);
         }
       } else {
@@ -47,13 +52,24 @@ public void draw() {
     }
   }
   popMatrix();
+  textSize(100);
+  fill(255);
+  text("FPS: " + frameRate, 0,100);
+}
+
+public void draw() {
+  if (offset.x != pOffset.x && 
+      offset.y != pOffset.y) {
+    drawLandscape();
+  }
   if (held) {
+    pOffset.x = offset.x;
+    pOffset.y = offset.y;
     float dMouseX = (mouseX - clickStart.x) / (width/32);
     float dMouseY = (mouseY - clickStart.y) / (width/32);
     PVector blockDiff = screen2block(dMouseX, dMouseY);
     offset = offset.add(blockDiff);
   }
-  text("FPS: " + frameRate, 0,100);
 }
 
 public void mousePressed() {
@@ -64,13 +80,15 @@ public void mousePressed() {
 
 public void mouseReleased() {
   held = false;
+  pOffset.x = offset.x;
+  pOffset.y = offset.y;
 }
 
 public PVector block2screen(float x,
                          float y,
                          float z) {
   return new PVector((x-y)*55,
-                     (x+y)*32-z*64);
+                     (x+y)*32-z*63);
 }
 
 public PVector screen2block(float x, float y) {
