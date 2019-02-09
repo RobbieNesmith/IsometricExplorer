@@ -3,8 +3,9 @@ PImage water;
 PImage dirt;
 PImage rock;
 
-int gridWidth=20;
-int grid[][];
+int gridWidth=50;
+float grid[][];
+boolean isRock[][];
 float nscale = .1;
 float nheight = 10;
 PVector clickStart = new PVector();
@@ -14,7 +15,8 @@ boolean held = false;
 
 public void setup() {
   fullScreen(P2D);
-  grid = new int[gridWidth][gridWidth];
+  grid = new float[gridWidth][gridWidth];
+  isRock = new boolean[gridWidth][gridWidth];
   grass = loadImage("platformerTile_48.png");
   water = loadImage("platformerTile_26.png");
   dirt = loadImage("platformerTile_01.png");
@@ -23,31 +25,46 @@ public void setup() {
 }
 
 public void drawLandscape() {
-  fill(150, 226, 255);
-  noStroke();
-  rect(0,0,width,height);
   pushMatrix();
-  translate(width/2, 3*height/4);
+  translate(width/2, height/2);
   float fxoff = offset.x % 1;
-  float ixoff = (int) offset.x;
+  int ixoff = (int) offset.x;
   float fyoff = offset.y % 1;
-  float iyoff = (int) offset.y;
-  for (int x = -gridWidth/2; x < gridWidth / 2; x++) {
-    for (int y = -gridWidth/2; y < gridWidth / 2; y++) {
-      float z = noise((x + ixoff) * nscale, (y+iyoff) * nscale)*nheight;
-      boolean isRock = noise((x + ixoff) * nscale, (y+iyoff) * nscale, 1000) > 0.6;
+  int iyoff = (int) offset.y;
+  
+  int pixoff = (int) pOffset.x;
+  int piyoff = (int) pOffset.y;
+  
+  if (ixoff != pixoff || iyoff != piyoff) {
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridWidth; y++) {
+        grid[x][y] = noise((x + ixoff) * nscale, (y+iyoff) * nscale)*nheight;
+        isRock[x][y] = noise((x + ixoff) * nscale, (y+iyoff) * nscale, 1000) > 0.6;
+      }
+    }
+  }
+  
+  for (int x = 0; x < gridWidth; x++) {
+    for (int y = 0; y < gridWidth; y++) {
+      float z = grid[x][y];
       if (z > 3) {
-        PVector sc = block2screen(x- fxoff,y-fyoff,z);
-        if(isRock) {
-          image(rock, sc.x, sc.y + 63);
-          image(rock, sc.x, sc.y);
-        } else {
-          image(dirt, sc.x, sc.y + 63);
-          image(grass, sc.x, sc.y);
+        PVector sc = block2screen(x- fxoff-gridWidth/2,y-fyoff-gridWidth/2,z);
+        if (sc.x > -width/2-100 && sc.x < width/2+100
+            && sc.y > -height/2-100 && sc.y < height/2 +100) { 
+          if(isRock[x][y]) {
+            image(rock, sc.x, sc.y + 63);
+            image(rock, sc.x, sc.y);
+          } else {
+            image(dirt, sc.x, sc.y + 63);
+            image(grass, sc.x, sc.y);
+          }
         }
       } else {
-        PVector sc = block2screen(x- fxoff,y-fyoff,3);
-        image(water, sc.x, sc.y);
+        PVector sc = block2screen(x- fxoff-gridWidth/2,y-fyoff-gridWidth/2,3);
+        if (sc.x > -width/2-100 && sc.x < width/2+100
+            && sc.y > -height/2-100 && sc.y < height/2 +100) { 
+          image(water, sc.x, sc.y);
+        }
       }
     }
   }
@@ -58,7 +75,7 @@ public void drawLandscape() {
 }
 
 public void draw() {
-  if (offset.x != pOffset.x && 
+  if (offset.x != pOffset.x &&
       offset.y != pOffset.y) {
     drawLandscape();
   }
