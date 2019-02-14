@@ -43,15 +43,18 @@ public void loadLandscape(int xoff, int yoff) {
 }
 
 public void drawLandscape() {
+  noStroke();
+  fill(200);
+  rect(0,0,width,height);
   pushMatrix();
   translate(width/2, 3*height/4);
-  float fxoff = offset.x % 1;
-  int ixoff = (int) offset.x;
-  float fyoff = offset.y % 1;
-  int iyoff = (int) offset.y;
+  float fxoff = betterMod(offset.x, 1);
+  int ixoff = floor(offset.x);
+  float fyoff = betterMod(offset.y, 1);
+  int iyoff = floor(offset.y);
   
-  int pixoff = (int) pOffset.x;
-  int piyoff = (int) pOffset.y;
+  int pixoff = floor(pOffset.x);
+  int piyoff = floor(pOffset.y);
   
   if (ixoff != pixoff || iyoff != piyoff) {
     loadLandscape(ixoff, iyoff);
@@ -112,8 +115,6 @@ public void mousePressed() {
 
 public void mouseReleased() {
   held = false;
-  pOffset.x = offset.x;
-  pOffset.y = offset.y;
   drawLandscape();
 }
 
@@ -130,4 +131,12 @@ public PVector screen2block(float x, float y) {
   float by = (xpy - xmy) / 2;
   float bx = xpy - by;
   return new PVector(bx, by, 0);
+}
+
+float betterMod(float a, float b) {
+  if (a >= 0) {
+    return a%b;
+  } else {
+    return a%b+b;
+  }
 }
