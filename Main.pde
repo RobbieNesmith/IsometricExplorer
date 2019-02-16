@@ -1,30 +1,44 @@
+PImage tileSheet;
+
 PImage grass;
 PImage water;
 PImage dirt;
 PImage rock;
 PImage cursor;
 
+int TILESHEET_OFFSET = 1;
+int TILESHEET_WIDTH = 32;
+
+int TILE_WIDTH = 16;
+int TILE_HEIGHT = 8;
+int TILE_Z_HEIGHT = 7;
+
 int gridWidth=40;
 float grid[][];
 boolean isRock[][];
-float nscale = .1;
+float nscale = 0.1;
 float nheight = 10;
 PVector clickStart = new PVector();
 PVector offset = new PVector();
 PVector pOffset = new PVector();
 boolean held = false;
 
+PGraphics buffer;
+
 public void setup() {
   fullScreen(P2D);
+  //size(1280,720, P2D);
   grid = new float[gridWidth][gridWidth];
   isRock = new boolean[gridWidth][gridWidth];
-  grass = loadImage("platformerTile_48.png");
-  water = loadImage("platformerTile_26.png");
-  dirt = loadImage("platformerTile_01.png");
-  rock = loadImage("voxelTile_29.png");
+  buffer = createGraphics(width / 4, height / 4, P2D);
+  tileSheet = loadImage("tiles.png");
+  grass = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET, TILESHEET_WIDTH, TILESHEET_WIDTH);
+  water = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 7, TILESHEET_WIDTH, TILESHEET_WIDTH);
+  dirt = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 6, TILESHEET_WIDTH, TILESHEET_WIDTH);
+  rock = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 6, TILESHEET_WIDTH, TILESHEET_WIDTH);
   cursor = loadImage("cursor.png");
   loadLandscape(0,0);
-  drawLandscape();
+  drawLandscape(buffer);
 }
 
 public boolean isTooTall(int x, int y) {
@@ -42,12 +56,13 @@ public void loadLandscape(int xoff, int yoff) {
   }
 }
 
-public void drawLandscape() {
-  noStroke();
-  fill(200);
-  rect(0,0,width,height);
-  pushMatrix();
-  translate(width/2, 3*height/4);
+public void drawLandscape(PGraphics graphics) {
+  graphics.beginDraw();
+  graphics.noStroke();
+  graphics.fill(200);
+  graphics.rect(0,0,graphics.width,graphics.height);
+  graphics.pushMatrix();
+  graphics.translate(graphics.width/2, graphics.height/2);
   float fxoff = betterMod(offset.x, 1);
   int ixoff = floor(offset.x);
   float fyoff = betterMod(offset.y, 1);
@@ -67,36 +82,38 @@ public void drawLandscape() {
         z = 3;
       }
       PVector sc = block2screen(x- fxoff-gridWidth/2,y-fyoff-gridWidth/2,z);
-      if (sc.x > -width/2-100 && sc.x < width/2+100
-          && sc.y > -3*height/4-100 && sc.y < height/4 +100) { 
+      if (sc.x > -graphics.width/2-100 && sc.x < graphics.width/2+100
+          && sc.y > -graphics.height/2-100 && sc.y < graphics.height/2 +100) { 
         if (z == 3) {
-          image(water, sc.x, sc.y);
+          graphics.image(water, sc.x, sc.y);
         } else if(isRock[x][y]) {
           if (isTooTall(x, y)) {
-            image(rock, sc.x, sc.y + 63);
+            graphics.image(rock, sc.x, sc.y + TILE_Z_HEIGHT);
           }
-          image(rock, sc.x, sc.y);
+          graphics.image(rock, sc.x, sc.y);
         } else {
           if (isTooTall(x, y)) {
-            image(dirt, sc.x, sc.y + 63);
+            graphics.image(dirt, sc.x, sc.y + TILE_Z_HEIGHT);
           }
-          image(grass, sc.x, sc.y);
+          graphics.image(grass, sc.x, sc.y);
         }
       }
     }
   }
-  popMatrix();
-  //textSize(100);
-  //fill(255);
-  //text("FPS: " + frameRate, 0,100);
+  graphics.popMatrix();
+  graphics.endDraw();
+  //graphics.textSize(10);
+  //graphics.fill(255);
+  //graphics.text("FPS: " + frameRate, 0,10);
 }
 
 public void draw() {
-  if (offset.x != pOffset.x &&
-      offset.y != pOffset.y) {
-    drawLandscape();
-  }
+  pushMatrix();
+  scale(4);
+  image(buffer, 0, 0);
+  popMatrix();
   if (held) {
+    drawLandscape(buffer);
     pOffset.x = offset.x;
     pOffset.y = offset.y;
     float dMouseX = (mouseX - clickStart.x) / (width/32);
@@ -115,19 +132,19 @@ public void mousePressed() {
 
 public void mouseReleased() {
   held = false;
-  drawLandscape();
+  drawLandscape(buffer);
 }
 
 public PVector block2screen(float x,
                          float y,
                          float z) {
-  return new PVector((x-y)*55,
-                     (x+y)*32-z*63);
+  return new PVector((x-y)*TILE_WIDTH,
+                     (x+y)*TILE_HEIGHT-z*TILE_Z_HEIGHT);
 }
 
 public PVector screen2block(float x, float y) {
-  float xpy = y / 32.0;
-  float xmy = x / 55.0;
+  float xpy = y / TILE_HEIGHT;
+  float xmy = x / TILE_WIDTH;
   float by = (xpy - xmy) / 2;
   float bx = xpy - by;
   return new PVector(bx, by, 0);
