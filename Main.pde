@@ -12,9 +12,11 @@ PImage tileSheet;
 PImage spriteSheet;
 
 PImage grass;
+PImage grassShadows[];
 PImage water;
 PImage dirt;
 PImage rock;
+PImage rockShadows[];
 PImage cursor;
 
 int gridWidth=40;
@@ -60,11 +62,20 @@ public void setup() {
   grid = new float[gridWidth][gridWidth];
   isRock = new boolean[gridWidth][gridWidth];
   buffer = createGraphics(width / 4, height / 4, P2D);
-  tileSheet = loadImage("tiles_taller.png");
+  tileSheet = loadImage("tiles_taller_shadow.png");
   grass = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET, TILESHEET_WIDTH, TILESHEET_WIDTH);
   water = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 7, TILESHEET_WIDTH, TILESHEET_WIDTH);
   dirt = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 6, TILESHEET_WIDTH, TILESHEET_WIDTH);
   rock = tileSheet.get(TILESHEET_OFFSET, TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 6, TILESHEET_WIDTH, TILESHEET_WIDTH);
+  
+  grassShadows = new PImage[5];
+  rockShadows = new PImage[5];
+  
+  for(int i = 0; i < 5; i++) {
+    grassShadows[i] = tileSheet.get(TILESHEET_OFFSET + (i+1) * (TILESHEET_OFFSET + TILESHEET_WIDTH), TILESHEET_OFFSET, TILESHEET_WIDTH, TILESHEET_WIDTH);
+    rockShadows[i] = tileSheet.get(TILESHEET_OFFSET + (i+1) * (TILESHEET_OFFSET + TILESHEET_WIDTH), TILESHEET_OFFSET + (TILESHEET_WIDTH + TILESHEET_OFFSET) * 6, TILESHEET_WIDTH, TILESHEET_WIDTH);
+  }
+  
   cursor = loadImage("cursor.png");
   loadLandscape(0,0);
   drawLandscape(buffer,0,0,gridWidth/2, gridWidth/2);
@@ -120,11 +131,41 @@ public void drawLandscape(PGraphics graphics, int minX, int minY, int maxX, int 
             graphics.image(rock, sc.x, sc.y + TILE_Z_HEIGHT);
           }
           graphics.image(rock, sc.x, sc.y);
+          if (x < gridWidth - 1 && grid[x+1][y] > z) {
+            graphics.image(rockShadows[0], sc.x, sc.y);
+          }
+          if (y > 0 && grid[x][y-1] > z) {
+            graphics.image(rockShadows[1], sc.x, sc.y);
+          }
+          if (y < gridWidth - 1 && grid[x][y+1] > z) {
+            graphics.image(rockShadows[2], sc.x, sc.y);
+          }
+          if (y < gridWidth - 1 && x < gridWidth - 1 && grid[x+1][y+1] > z) {
+            graphics.image(rockShadows[3], sc.x, sc.y);
+          }
+          if (x < gridWidth - 1 && y > 0 && grid[x+1][y-1] > z) {
+            graphics.image(rockShadows[4], sc.x, sc.y);
+          }
         } else {
           if (isTooTall(x, y)) {
             graphics.image(dirt, sc.x, sc.y + TILE_Z_HEIGHT);
           }
           graphics.image(grass, sc.x, sc.y);
+          if (x < gridWidth - 1 && grid[x+1][y] > z) {
+            graphics.image(grassShadows[0], sc.x, sc.y);
+          }
+          if (y > 0 && grid[x][y-1] > z) {
+            graphics.image(grassShadows[1], sc.x, sc.y);
+          }
+          if (y < gridWidth - 1 && grid[x][y+1] > z) {
+            graphics.image(grassShadows[2], sc.x, sc.y);
+          }
+          if (y < gridWidth - 1 && x < gridWidth - 1 && grid[x+1][y+1] > z) {
+            graphics.image(grassShadows[3], sc.x, sc.y);
+          }
+          if (x < gridWidth - 1 && y > 0 && grid[x+1][y-1] > z) {
+            graphics.image(grassShadows[4], sc.x, sc.y);
+          }
         }
       }
     }
@@ -175,6 +216,7 @@ public void draw() {
   curSprite.tick();
   curSprite.draw(buffer, playerCoords.x, playerCoords.y -32,32,32);
   buffer.popMatrix();
+  buffer.text(frameRate, 0, 20);
   buffer.endDraw();
   drawLandscape(buffer,0, gridWidth/2+1, gridWidth/2+1, gridWidth);
   drawLandscape(buffer,gridWidth/2+1, 0, gridWidth, gridWidth/2+1);
