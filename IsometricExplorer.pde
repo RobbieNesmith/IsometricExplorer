@@ -38,7 +38,7 @@ PGraphics buffer;
 public void setup() {
   fullScreen(renderMode);
   //size(1280,720, renderMode);
-  landType = (int) random(7);
+  landType = (int) random(6);
   //landType = 0;
   
   int spriteSheetIndex = (int) random(playerSpriteSheets.length);
@@ -106,16 +106,7 @@ public void drawLandscape(PGraphics graphics, int minX, int minY, int maxX, int 
   graphics.pushMatrix();
   graphics.translate(graphics.width/2, graphics.height/2);
   float fxoff = betterMod(offset.x, 1);
-  int ixoff = floor(offset.x);
   float fyoff = betterMod(offset.y, 1);
-  int iyoff = floor(offset.y);
-  
-  int pixoff = floor(pOffset.x);
-  int piyoff = floor(pOffset.y);
-  
-  if (ixoff != pixoff || iyoff != piyoff) {
-    loadLandscape(ixoff, iyoff);
-  }
   
   for (int x = minX; x < maxX; x++) {
     for (int y = minY; y < maxY; y++) {
@@ -145,6 +136,15 @@ public void drawLandscape(PGraphics graphics, int minX, int minY, int maxX, int 
 }
 
 public void draw() {
+  int ixoff = floor(offset.x);
+  int iyoff = floor(offset.y);
+  int pixoff = floor(pOffset.x);
+  int piyoff = floor(pOffset.y);
+  
+  if (ixoff != pixoff || iyoff != piyoff) {
+    loadLandscape(ixoff, iyoff);
+  }
+  
   buffer.beginDraw();
   drawLandscape(buffer,0,0, gridWidth/2+1, gridWidth/2+1);
   PVector playerCoords = block2screen(0, 0, grid[gridWidth/2][gridWidth/2]-1);
