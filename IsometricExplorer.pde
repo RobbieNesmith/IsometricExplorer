@@ -14,7 +14,6 @@ PImage tileSheet;
 PImage spriteSheet;
 
 PImage water;
-PImage cursor;
 PImage landTypes[][];
 
 String[] playerSpriteSheets = {"GenericCharacter", "Knight", "MusketGuy", "Ninja", "Pirate", "Roman", "Viking"};
@@ -27,11 +26,11 @@ int shadowVariants[][];
 int landType;
 float nscale = 0.1;
 float nheight = 10;
-PVector clickStart = new PVector();
 PVector offset = new PVector();
 PVector pOffset = new PVector();
 boolean held = false;
 PVector blockDiff = new PVector();
+int vmax;
 
 PGraphics buffer;
 
@@ -40,6 +39,8 @@ public void setup() {
   //size(1280,720, renderMode);
   landType = (int) random(6);
   //landType = 0;
+  
+  vmax = max(width, height);
   
   int spriteSheetIndex = (int) random(playerSpriteSheets.length);
   spriteSheet = loadImage(playerSpriteSheets[spriteSheetIndex] + ".png");
@@ -59,7 +60,6 @@ public void setup() {
   }
   water = tileSheet.get(0, TILESHEET_WIDTH * 7, TILESHEET_WIDTH, TILESHEET_WIDTH);
   
-  cursor = loadImage("cursor.png");
   loadLandscape(0,0);
   drawLandscape(buffer,0,0,gridWidth/2, gridWidth/2);
 }
@@ -170,8 +170,8 @@ public void draw() {
     player.setIsWalking(true);
     pOffset.x = offset.x;
     pOffset.y = offset.y;
-    float dMouseX = (mouseX - clickStart.x) / (width);
-    float dMouseY = (mouseY - clickStart.y) / (width);
+    float dMouseX = (mouseX - width / 2.0) / (vmax / 2);
+    float dMouseY = (mouseY - height / 2.0) / (vmax / 2);
     blockDiff = screen2block(dMouseX, dMouseY);
     if (blockDiff.x > 0 && blockDiff.x > abs(blockDiff.y)) {
       player.setDirection(0); //down right
@@ -183,18 +183,14 @@ public void draw() {
       player.setDirection(3); // down left
     }
     offset = offset.add(blockDiff);
-    
-    image(cursor, clickStart.x-64, clickStart.y-64, 128, 128);
   } else {
     player.setIsWalking(false);
   }
-  text(frameRate, 0,20);
+  //text(frameRate, 0,20);
 }
 
 public void mousePressed() {
   held = true;
-  clickStart.x = mouseX;
-  clickStart.y = mouseY;
 }
 
 public void mouseReleased() {
