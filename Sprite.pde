@@ -18,11 +18,15 @@ class Sprite {
       }
     }
   }
-  
+
   public void draw(float x, float y, float xSize, float ySize) {
     image(this.images[this.curFrame], x, y, xSize, ySize);
   }
-  
+ 
+  public void draw(PGraphics gr, float x, float y) {
+    gr.image(this.images[this.curFrame], x, y);
+  }
+
   public void draw(PGraphics gr, float x, float y, float xSize, float ySize) {
     gr.image(this.images[this.curFrame], x, y, xSize, ySize);
   }

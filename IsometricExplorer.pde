@@ -8,13 +8,17 @@ int TILE_WIDTH = 16;
 int TILE_HEIGHT = 8;
 int TILE_Z_HEIGHT = 8;
 
+String renderMode = P2D;
+
 PImage tileSheet;
 PImage spriteSheet;
 
 PImage water;
 PImage cursor;
-
 PImage landTypes[][];
+
+String[] playerSpriteSheets = {"GenericCharacter", "Knight", "MusketGuy", "Ninja", "Pirate", "Roman", "Viking"};
+PlayerCharacter player;
 
 int gridWidth=40;
 float grid[][];
@@ -27,44 +31,24 @@ PVector clickStart = new PVector();
 PVector offset = new PVector();
 PVector pOffset = new PVector();
 boolean held = false;
-int direction = 0;
 PVector blockDiff = new PVector();
-
-Sprite idleForward;
-Sprite idleBackward;
-Sprite walkingForward;
-Sprite walkingBackward;
 
 PGraphics buffer;
 
 public void setup() {
-  fullScreen(P2D);
-  //size(1280,720, P2D);
+  fullScreen(renderMode);
+  //size(1280,720, renderMode);
+  landType = (int) random(7);
+  //landType = 0;
   
-  //landType = (int) random(7);
-  landType = 0;
-  
-  spriteSheet = loadImage("GenericCharacter.png");
-  PImage[] idleForwardImages = new PImage[4];
-  PImage[] idleBackwardImages = new PImage[4];
-  PImage[] walkingForwardImages = new PImage[4];
-  PImage[] walkingBackwardImages = new PImage[4];
-  for (int i = 0; i < 4; i ++) {
-    idleForwardImages[i] = spriteSheet.get((SPRITE_SIZE + SPRITE_SPACING) * i, (SPRITE_SIZE + SPRITE_SPACING) * 0, SPRITE_SIZE, SPRITE_SIZE);
-    idleBackwardImages[i] = spriteSheet.get((SPRITE_SIZE + SPRITE_SPACING) * i, (SPRITE_SIZE + SPRITE_SPACING) * 3, SPRITE_SIZE, SPRITE_SIZE);
-    walkingForwardImages[i] = spriteSheet.get((SPRITE_SIZE + SPRITE_SPACING) * i, (SPRITE_SIZE + SPRITE_SPACING) * 1, SPRITE_SIZE, SPRITE_SIZE);
-    walkingBackwardImages[i] = spriteSheet.get((SPRITE_SIZE + SPRITE_SPACING) * i, (SPRITE_SIZE + SPRITE_SPACING) * 4, SPRITE_SIZE, SPRITE_SIZE);
-  }
-  
-  idleForward = new Sprite(idleForwardImages, 10);
-  idleBackward = new Sprite(idleBackwardImages, 10);
-  walkingForward = new Sprite(walkingForwardImages, 10);
-  walkingBackward = new Sprite(walkingBackwardImages, 10);
+  int spriteSheetIndex = (int) random(playerSpriteSheets.length);
+  spriteSheet = loadImage(playerSpriteSheets[spriteSheetIndex] + ".png");
+  player = new PlayerCharacter(spriteSheet, SPRITE_SIZE, SPRITE_SPACING);
   
   grid = new float[gridWidth][gridWidth];
   isRock = new boolean[gridWidth][gridWidth];
   shadowVariants = new int[gridWidth][gridWidth];
-  buffer = createGraphics(width / 4, height / 4, P2D);
+  buffer = createGraphics(width / 4, height / 4, renderMode);
   tileSheet = loadImage("tiles_taller_calculated_shadows.png");
   landTypes = new PImage[7][32];
   
@@ -166,40 +150,12 @@ public void draw() {
   PVector playerCoords = block2screen(0, 0, grid[gridWidth/2][gridWidth/2]-1);
   buffer.pushMatrix();
   buffer.translate(buffer.width/2, buffer.height/2);
-  Sprite curSprite = walkingForward;
   if (held) {
-    if (direction == 0) {
-      curSprite = walkingForward;
-    } else if (direction == 1) {
-      curSprite = walkingBackward;
-    } else if (direction == 2) {
-      buffer.scale(-1, 1);
-      //buffer.translate(-32,0);
-      curSprite = walkingBackward;
-    } else if (direction == 3) {
-      buffer.scale(-1, 1);
-      //buffer.translate(-32,0);
-      curSprite = walkingForward;
-    }
     float inverseDist = 1/max(blockDiff.mag(), 0.01);
-    curSprite.ticksPerFrame = (int) map(inverseDist, 0 , 100, 1, 50);
-  } else {
-    if (direction == 0) {
-      curSprite = idleForward;
-    } else if (direction == 1) {
-      curSprite = idleBackward;
-    } else if (direction == 2) {
-      buffer.scale(-1, 1);
-      //buffer.translate(-32,0);
-      curSprite = idleBackward;
-    } else if (direction == 3) {
-      buffer.scale(-1, 1);
-      //buffer.translate(-32,0);
-      curSprite = idleForward;
-    }
+    player.setTicksPerFrame((int) map(inverseDist, 5 , 100, 1, 50));
   }
-  curSprite.tick();
-  curSprite.draw(buffer, playerCoords.x, playerCoords.y -32,32,32);
+  player.tick();
+  player.draw(buffer, playerCoords.x, playerCoords.y - SPRITE_SIZE);
   buffer.popMatrix();
   drawLandscape(buffer,0, gridWidth/2+1, gridWidth/2+1, gridWidth);
   drawLandscape(buffer,gridWidth/2+1, 0, gridWidth, gridWidth/2+1);
@@ -211,24 +167,26 @@ public void draw() {
   popMatrix();
 
   if (held) {
-
+    player.setIsWalking(true);
     pOffset.x = offset.x;
     pOffset.y = offset.y;
     float dMouseX = (mouseX - clickStart.x) / (width);
     float dMouseY = (mouseY - clickStart.y) / (width);
     blockDiff = screen2block(dMouseX, dMouseY);
     if (blockDiff.x > 0 && blockDiff.x > abs(blockDiff.y)) {
-      direction = 0; // down right
+      player.setDirection(0); //down right
     } else if (blockDiff.y < 0 && abs(blockDiff.y) > abs(blockDiff.x)) {
-      direction = 1; // up right
+      player.setDirection(1); // up right
     } else if (blockDiff.x < 0 && abs(blockDiff.x) > abs(blockDiff.y)) {
-      direction = 2; // up left
+      player.setDirection(2); // up left
     } else if (blockDiff.y > 0 && blockDiff.y > abs(blockDiff.x)) {
-      direction = 3; // down left
+      player.setDirection(3); // down left
     }
     offset = offset.add(blockDiff);
     
     image(cursor, clickStart.x-64, clickStart.y-64, 128, 128);
+  } else {
+    player.setIsWalking(false);
   }
   text(frameRate, 0,20);
 }
